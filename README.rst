@@ -1,6 +1,8 @@
 A multi-process job queue
 =========================
 
+|version| |docs| |tests| |coverage|
+
 Description
 -----------
 
@@ -24,3 +26,19 @@ To install the latest release::
 To install the latest development version, clone this repository and run::
 
     pip install .
+
+.. |version| image:: https://badge.fury.io/py/jobq.svg
+   :alt: Latest version
+   :target: https://pypi.org/project/jobq/
+
+.. |docs| image::  https://readthedocs.org/projects/jobq/badge/
+   :alt: Documentation
+   :target: https://jobq.readthedocs.io/
+
+.. |tests| image:: https://gitlab.unimelb.edu.au/rgmoss/job-queue/badges/master/pipeline.svg
+   :alt: Test cases
+   :target: https://gitlab.unimelb.edu.au/rgmoss/job-queue
+
+.. |coverage| image:: https://gitlab.unimelb.edu.au/rgmoss/job-queue/badges/master/coverage.svg
+   :alt: Test coverage
+   :target: https://gitlab.unimelb.edu.au/rgmoss/job-queue
