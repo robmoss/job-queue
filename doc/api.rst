@@ -1,6 +1,6 @@
 API documentation
 =================
 
-.. module:: jobq
+.. module:: parq
 
-.. autofunction:: jobq.run
+.. autofunction:: parq.run

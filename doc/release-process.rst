@@ -19,7 +19,7 @@ tagging the relevant commit with the new version number.
      **does not** need to be updated if the version number is being increased
      from X.Y.Z to X.Y.Z+1.
 
-   * Update the version number in ``src/jobq/version.py``.
+   * Update the version number in ``src/parq/version.py``.
 
    * Update the version number in ``setup.cfg``.
 
@@ -29,24 +29,24 @@ tagging the relevant commit with the new version number.
 
    * ``doc/conf.py``
 
-   * ``src/jobq/__init__.py``
+   * ``src/parq/__init__.py``
 
 * Describe the changes at the top of ``NEWS.rst`` under a heading of the form
   ``X.Y.Z (YYYY-MM-DD)``, which identifies the new version number and the
   date on which this version was released.
 
-* Commit these changes; set the commit message to ``Release jobq X.Y.Z``.
+* Commit these changes; set the commit message to ``Release parq X.Y.Z``.
 
   .. code-block:: shell
 
-     git add NEWS.rst doc/conf.py src/jobq/version.py setup.cfg
-     git commit -m "Release jobq X.Y.Z"
+     git add NEWS.rst doc/conf.py src/parq/version.py setup.cfg
+     git commit -m "Release parq X.Y.Z"
 
 * Tag this commit ``X.Y.Z``.
 
   .. code-block:: shell
 
-     git tag -a X.Y.Z -m "jobq X.Y.Z"
+     git tag -a X.Y.Z -m "parq X.Y.Z"
 
 * Push this commit **and** the new tag upstream.
 
@@ -72,21 +72,21 @@ Ensure that all uncommitted changes are stashed, **or they will be packaged!**
 
    git stash
 
-Build the wheel ``./dist/jobq-X.Y.Z-py3-none-any.whl``:
+Build the wheel ``./dist/parq-X.Y.Z-py3-none-any.whl``:
 
 .. code-block:: shell
 
    python3 -m build
 
 Upload this wheel to the PyPI **test** server, so that any problems can be
-`identified <https://testpypi.python.org/pypi/jobq/>`__ and fixed:
+`identified <https://testpypi.python.org/pypi/parq/>`__ and fixed:
 
 .. code-block:: shell
 
-   python3 -m twine upload -r testpypi dist/jobq-X.Y.Z-py3-none-any.whl
+   python3 -m twine upload -r testpypi dist/parq-X.Y.Z-py3-none-any.whl
 
 Then upload this wheel to PyPI:
 
 .. code-block:: shell
 
-   python3 -m twine upload dist/jobq-X.Y.Z-py2.py3-none-any.whl
+   python3 -m twine upload dist/parq-X.Y.Z-py2.py3-none-any.whl

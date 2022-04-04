@@ -1,4 +1,4 @@
-"""Test cases for jobq.run."""
+"""Test cases for parq.run."""
 
 import logging
 import multiprocessing
@@ -6,7 +6,7 @@ import os
 import signal
 import time
 
-import jobq
+import parq
 
 # NOTE: this test runs correctly on my laptop, but fails on Gitlab CI.
 # Even though the worker tasks are terminated, their exit codes are zero.
@@ -28,7 +28,7 @@ def do_not_test_ctrl_c():
             pid = multiprocessing.current_process().pid
             logger.info('HELLO from {}'.format(pid))
             values = [(i,) for i in range(num_tasks)]
-            success = jobq.run(job, values, n_proc=2)
+            success = parq.run(job, values, n_proc=2)
         except KeyboardInterrupt:
             logger.info('Caught KeyboardInterrupt, exiting')
             status.value = 19
@@ -75,7 +75,7 @@ def test_success():
     # Run the functions in parallel and ensure it completed successfully.
     values = [(i,) for i in range(10)]
     n_proc = 2
-    success = jobq.run(func, values, n_proc=n_proc)
+    success = parq.run(func, values, n_proc=n_proc)
     assert success
 
 
@@ -92,7 +92,7 @@ def test_failure_early(caplog):
     values = [(i,) for i in range(10)]
     n_proc = 2
     # NOTE: hide the exception stack trace with trace=False.
-    success = jobq.run(func, values, n_proc=n_proc, trace=False)
+    success = parq.run(func, values, n_proc=n_proc, trace=False)
     assert not success
 
     # The failure at x == 3 should result in all worker processes failing.
@@ -115,7 +115,7 @@ def test_failure_late(caplog):
     values = [(i,) for i in range(10)]
     n_proc = 2
     # NOTE: hide the exception stack trace with trace=False.
-    success = jobq.run(func, values, n_proc=n_proc,
+    success = parq.run(func, values, n_proc=n_proc,
                        fail_early=False, trace=False)
     assert not success
 

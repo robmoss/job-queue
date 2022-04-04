@@ -1,7 +1,7 @@
 A multi-process job queue
 =========================
 
-Welcome to the jobq_ documentation.
+Welcome to the parq_ documentation.
 This package implements a queue that distributes jobs over multiple processes.
 
 License
@@ -17,7 +17,7 @@ A simple example
 
 .. code-block:: python
 
-   >>> import jobq
+   >>> import parq
    >>> # Define a job that prints its input argument.
    >>> def my_job(n):
    ...     print('Running job #{}'.format(n))
@@ -25,23 +25,21 @@ A simple example
    >>> # Define the input argument for each job.
    >>> job_inputs = [(i,) for i in range(10)]
    >>> # Run these 10 jobs using 4 processes.
-   >>> success = jobq.run(my_job, job_inputs, n_proc=4)
+   >>> success = parq.run(my_job, job_inputs, n_proc=4)
    >>> assert success
 
 Installation
 ------------
 
 You must have Python 3.6, or later, installed.
-On Windows, the simplest option is to use
-`Anaconda <https://docs.continuum.io/anaconda/>`__.
-You can install jobq_ with ``pip``. This is best done in a
-`virtual environment
-<http://docs.python-guide.org/en/latest/dev/virtualenvs/>`__.
+On Windows, the simplest option is to use `Anaconda <https://docs.continuum.io/anaconda/>`__.
+You can install parq_ with ``pip``.
+This is best done in a `virtual environment <http://docs.python-guide.org/en/latest/dev/virtualenvs/>`__.
 
-To install the jobq package:
+To install the parq package:
    .. code-block:: shell
 
-      pip install jobq
+      pip install parq
 
 .. toctree::
    :maxdepth: 2

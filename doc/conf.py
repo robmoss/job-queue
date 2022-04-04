@@ -66,7 +66,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'jobq'
+project = 'parq'
 copyright = '2016-2022, Rob Moss'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -89,7 +89,7 @@ language = 'en'
 #today_fmt = '%B %d, %Y'
 
 rst_epilog = """
-.. _jobq: https://bitbucket.org/robmoss/job-queue
+.. _parq: https://bitbucket.org/robmoss/job-queue
 """
 
 # List of patterns, relative to source directory, that match files and
@@ -213,7 +213,7 @@ html_show_sourcelink = False
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'jobqdoc'
+htmlhelp_basename = 'parqdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -233,7 +233,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'jobq.tex', 'jobq documentation',
+  ('index', 'parq.tex', 'parq documentation',
    'Rob Moss', 'manual'),
 ]
 
@@ -263,7 +263,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'jobq', 'jobq documentation',
+    ('index', 'parq', 'parq documentation',
      ['Rob Moss'], 1)
 ]
 
@@ -277,9 +277,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'jobq', 'jobq documentation',
-   'Rob Moss', 'jobq',
-   'Latin hypercube sampler for scenario modelling.',
+  ('index', 'parq', 'parq documentation',
+   'Rob Moss', 'parq',
+   'A multi-process job queue.',
    'Miscellaneous'),
 ]
 

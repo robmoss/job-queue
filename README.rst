@@ -6,7 +6,7 @@ A multi-process job queue
 Description
 -----------
 
- This package implements a queue that distributes jobs over multiple processes.
+This package implements a queue that distributes jobs over multiple processes.
 
 License
 -------
@@ -21,19 +21,19 @@ Installation
 
 To install the latest release::
 
-    pip install jobq
+    pip install parq
 
 To install the latest development version, clone this repository and run::
 
     pip install .
 
-.. |version| image:: https://badge.fury.io/py/jobq.svg
+.. |version| image:: https://badge.fury.io/py/parq.svg
    :alt: Latest version
-   :target: https://pypi.org/project/jobq/
+   :target: https://pypi.org/project/parq/
 
-.. |docs| image::  https://readthedocs.org/projects/jobq/badge/
+.. |docs| image::  https://readthedocs.org/projects/parq/badge/
    :alt: Documentation
-   :target: https://jobq.readthedocs.io/
+   :target: https://parq.readthedocs.io/
 
 .. |tests| image:: https://gitlab.unimelb.edu.au/rgmoss/job-queue/badges/master/pipeline.svg
    :alt: Test cases
