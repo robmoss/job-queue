@@ -20,7 +20,7 @@ A simple example
    >>> import parq
    >>> # Define a job that prints its input argument.
    >>> def my_job(n):
-   ...     print('Running job #{}'.format(n))
+   ...     print(f'Running job #{n}')
    ...
    >>> # Define the input argument for each job.
    >>> job_inputs = [(i,) for i in range(10)]
