@@ -1,6 +1,7 @@
 """A multi-process job queue."""
 
 import ctypes
+import dataclasses
 import logging
 import multiprocessing
 import pickle
@@ -8,6 +9,7 @@ import queue
 import signal
 import sys
 import traceback
+from typing import Any, Callable
 
 from . import version
 
@@ -17,6 +19,64 @@ __email__ = 'rgmoss@unimelb.edu.au'
 __copyright__ = '2016-2022, Rob Moss'
 __license__ = 'BSD 3-Clause License'
 __version__ = version.__version__
+
+
+@dataclasses.dataclass
+class WorkerConfig:
+    func: Callable[[Any], None]
+    in_queue: multiprocessing.Queue
+    out_queue: multiprocessing.Queue
+    stop_workers: multiprocessing.Value
+    fail_early: bool = True
+    trace: bool = True
+
+
+@dataclasses.dataclass
+class Result:
+    """
+    The result of running a number of jobs.
+
+    :param success: Whether all jobs completed successfully.
+    :type success: bool
+    :param job_count: The number of jobs that were submitted.
+    :type job_count: int
+    :param successful_jobs: The jobs that were completed successfully.
+    :type successful_jobs: [Any]
+    :param unsuccessful_jobs: The jobs that were not completed successfully.
+    :type unsuccessful_jobs: [Any]
+    :param failed_worker_count: The number of worker processes that terminated
+        early.
+    :type failed_worker_count: int
+
+    Instances are considered true if ``success`` is true, otherwise they are
+    considered false.
+
+    >>> from parq import Result
+    >>> res_good = Result(True, 0, [], [], 0)
+    >>> assert res_good
+    >>> res_bad = Result(False, 0, [], [], 0)
+    >>> assert not res_bad
+    """
+    success: bool
+    job_count: int
+    successful_jobs: [Any]
+    unsuccessful_jobs: [Any]
+    failed_worker_count: int
+
+    def __bool__(self):
+        """
+        Return ``True`` if all jobs completed successfully, otherwise return
+        ``False``.
+        """
+        return self.success
+
+    def num_successful(self):
+        """Return the number of jobs that were completed successfully."""
+        return len(self.successful_jobs)
+
+    def num_unsuccessful(self):
+        """Return the number of jobs that were not completed successfully."""
+        return len(self.unsuccessful_jobs)
 
 
 def fails_to_pickle(item):
@@ -45,7 +105,7 @@ def fails_to_pickle(item):
     def descend_into(value, path):
         try:
             pickle.dumps(value)
-        except (pickle.PicklingError, TypeError):
+        except (pickle.PicklingError, TypeError, AttributeError):
             seq = try_iter(value)
             if seq is not None:
                 for i in seq:
@@ -56,15 +116,66 @@ def fails_to_pickle(item):
     descend_into(item, [])
     if invalid_paths:
         for (path, value) in invalid_paths:
-            if path[0] == 2:
-                path_str = "][".join(repr(p) for p in path[1:])
-                msg = "Invalid value: extra[{}] = {}".format(path_str, value)
-            else:
-                msg = "Invalid value: {}".format(value)
+            msg = "Invalid value: {}".format(value)
             logger.error(msg)
         return True
 
     return False
+
+
+def _worker(config):
+    # Ignore the signal that raises KeyboardInterrupt exceptions; the main
+    # loop will handle this exception and ensure each process terminates.
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    status_ok = True
+    logger = multiprocessing.get_logger()
+
+    while not config.in_queue.empty():
+        if config.stop_workers.value:
+            logger.debug('Worker stopping early')
+            status_ok = False
+            break
+        try:
+            job_num, args = config.in_queue.get(block=False)
+            logger.debug(f'Worker received job #{job_num}: {args}')
+            config.func(*args)
+            logger.debug(f'Worker finished job #{job_num}')
+            config.out_queue.put((job_num, args), block=False)
+            logger.debug(f'Worker recorded job #{job_num}')
+        except queue.Empty:
+            pass
+        except Exception:
+            logger.debug('Worker caught an exception')
+            if config.trace:
+                logger.info(traceback.format_exc())
+            status_ok = False
+            if config.fail_early:
+                # NOTE: signal other worker processes to stop.
+                with config.stop_workers.get_lock():
+                    config.stop_workers.value = True
+                break
+
+    logger.info(f'Worker exiting, success = {status_ok}')
+    if not status_ok:
+        sys.exit(1)
+
+
+def _build_job_queue(jobs):
+    job_q = multiprocessing.Queue()
+    job_table = {}
+
+    job_num = 0
+    for args in jobs:
+        if fails_to_pickle(args):
+            raise ValueError(f'Invalid arguments: {args}')
+        job_num += 1
+        try:
+            job_q.put((job_num, args), block=False)
+        except queue.Full:
+            raise ValueError(f'Could not add job {job_num} to the queue')
+        job_table[job_num] = args
+
+    return job_q, job_num, job_table
 
 
 def run(func, iterable, n_proc, fail_early=True, trace=True):
@@ -79,66 +190,35 @@ def run(func, iterable, n_proc, fail_early=True, trace=True):
     :param trace: Whether to print stack traces for jobs that raise an
         exception.
 
-    :returns: ``True`` if all jobs were successfully completed (i.e., each
-        process terminated with an exit code of ``0``).
+    :returns: A :class:`Result` instance.
+    :rtype: parq.Result
     """
     # Note: we avoid using multiprocessing.Pool because it does not handle
     # KeyboardInterrupt exceptions correctly. For details, see:
     # http://bryceboe.com/2012/02/14/python-multiprocessing-pool-and-keyboardinterrupt-revisited/
     logger = logging.getLogger(__name__)
-    job_q = multiprocessing.Queue()
+    job_q, n_jobs, job_table = _build_job_queue(iterable)
+    done_q = multiprocessing.Queue()
     stop_workers = multiprocessing.Value(ctypes.c_bool, False)
     workers = []
-
-    def apply_func(job_q, stop_workers):
-        # Ignore the signal that raises KeyboardInterrupt exceptions; the main
-        # loop will handle this exception and ensure each process terminates.
-        signal.signal(signal.SIGINT, signal.SIG_IGN)
-        status_ok = True
-
-        while not job_q.empty():
-            if stop_workers.value:
-                status_ok = False
-                break
-            try:
-                args = job_q.get(block=False)
-                func(*args)
-            except queue.Empty:
-                pass
-            except Exception:
-                if trace:
-                    print(traceback.format_exc())
-                status_ok = False
-                if fail_early:
-                    # NOTE: signal other worker processes to stop.
-                    with stop_workers.get_lock():
-                        stop_workers.value = True
-                    break
-
-        if not status_ok:
-            sys.exit(1)
-
-    n_job = 0
-    for args in iterable:
-        if fails_to_pickle(args):
-            logger.error("Encountered invalid arguments, terminating")
-            return
-        n_job += 1
-        try:
-            job_q.put(args, block=False)
-        except queue.Full:
-            logger.error("Could not add job {} to the queue".format(n_job))
-            return
+    worker_config = WorkerConfig(
+        func=func,
+        in_queue=job_q,
+        out_queue=done_q,
+        stop_workers=stop_workers,
+        fail_early=fail_early,
+        trace=trace)
 
     try:
         # Start the worker processes.
-        if n_proc > n_job:
+        if n_proc > n_jobs:
             # Spawn no more processes than there are jobs
-            n_proc = n_job
-        logger.info("Spawning {} workers for {} jobs".format(n_proc, n_job))
+            n_proc = n_jobs
+        logger.info("Spawning {} workers for {} jobs".format(n_proc, n_jobs))
         for i in range(n_proc):
-            proc = multiprocessing.Process(target=apply_func,
-                                           args=[job_q, stop_workers])
+            proc = multiprocessing.Process(
+                target=_worker,
+                args=[worker_config])
             workers.append(proc)
             proc.start()
         # Wait for each worker to finish. Without this loop, we jump straight
@@ -154,15 +234,34 @@ def run(func, iterable, n_proc, fail_early=True, trace=True):
     except Exception as e:
         print(e)
     finally:
-        all_good = True
+        successful_jobs = []
+        successful_job_nums = set()
+        while not done_q.empty():
+            (job_num, args) = done_q.get(block=False)
+            successful_jobs.append(args)
+            successful_job_nums.add(job_num)
+        unsuccessful_jobs = [
+            args for (job_num, args) in job_table.items()
+            if job_num not in successful_job_nums
+        ]
+        n_done = len(successful_jobs)
+        success = n_done == n_jobs
+
         # Wait for each worker to finish.
+        failed_worker_count = 0
         for ix, worker in enumerate(workers):
             worker.join()
             # Note: worker.exitcode should be 0 if it completed successfully.
             # It will be -N if it was terminated by signal N.
             # It will apparently be 1 if an exception was raised.
-            all_good = all_good and worker.exitcode == 0
+            # all_good = all_good and worker.exitcode == 0
             if worker.exitcode != 0:
                 msg = "Worker {} exit code: {}"
                 logger.info(msg.format(ix, worker.exitcode))
-        return all_good
+                failed_worker_count += 1
+
+        return Result(success=success,
+                      job_count=n_jobs,
+                      successful_jobs=successful_jobs,
+                      unsuccessful_jobs=unsuccessful_jobs,
+                      failed_worker_count=failed_worker_count)
