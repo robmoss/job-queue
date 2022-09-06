@@ -9,6 +9,7 @@ cache:
 # Run all of the test activities in tox.ini using Python 3.7.
 tox-37:
   image: python:3.7-slim
+  coverage: '/^TOTAL.+?(\d+\%)$/'
   script:
     - pip install tox
     - tox
