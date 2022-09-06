@@ -31,7 +31,7 @@ A simple example
 Installation
 ------------
 
-You must have Python 3.6, or later, installed.
+You must have Python 3.7, or later, installed.
 On Windows, the simplest option is to use `Anaconda <https://docs.continuum.io/anaconda/>`__.
 You can install parq_ with ``pip``.
 This is best done in a `virtual environment <http://docs.python-guide.org/en/latest/dev/virtualenvs/>`__.
