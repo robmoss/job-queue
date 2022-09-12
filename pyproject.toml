@@ -1,8 +1,9 @@
-# NOTE: setuptools 40.9.0 added support for projects without setup.py.
+# Setuptools 40.9.0 added support for projects without setup.py.
+# Setuptools 42.0.0 added support for the "license_files" option.
 
 [build-system]
 requires = [
-    "setuptools >= 40.9",
+    "setuptools >= 42",
     "wheel",
 ]
 build-backend = "setuptools.build_meta"
