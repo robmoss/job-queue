@@ -5,9 +5,6 @@ build:
 
 python:
   version: 3.7
-  install:
-    - method: pip
-      path: .
 
 sphinx:
   configuration: doc/conf.py
