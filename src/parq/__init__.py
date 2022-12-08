@@ -144,13 +144,14 @@ def _worker(config):
             config.out_queue.put(job_num, block=False)
             logger.debug(f'Worker recorded job #{job_num}')
         except queue.Empty:
-            pass
+            logger.debug('Queue is empty')
         except Exception:
             logger.debug('Worker caught an exception')
             if config.trace:
                 logger.info(traceback.format_exc())
             status_ok = False
             if config.fail_early:
+                logger.debug('Will stop workers early')
                 # NOTE: signal other worker processes to stop.
                 with config.stop_workers.get_lock():
                     config.stop_workers.value = True
@@ -224,11 +225,15 @@ def run(func, iterable, n_proc, fail_early=True, trace=True, level=None):
                 args=[worker_config])
             workers.append(proc)
             proc.start()
+        logger.debug('Started all workers')
         # Wait for each worker to finish. Without this loop, we jump straight
         # to the finally clause and the KeyboardInterrupt handler (below) is
         # never triggered.
         for worker in workers:
+            logger.debug('Joining {}'.format(worker))
             worker.join()
+            logger.debug('Joined {}'.format(worker))
+        logger.debug('Joined all workers')
     except KeyboardInterrupt:
         # Force each worker to terminate.
         logger.info("Received CTRL-C, terminating {} workers".format(n_proc))
