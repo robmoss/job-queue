@@ -141,7 +141,7 @@ def _worker(config):
             logger.debug(f'Worker received job #{job_num}: {args}')
             config.func(*args)
             logger.debug(f'Worker finished job #{job_num}')
-            config.out_queue.put((job_num, args), block=False)
+            config.out_queue.put(job_num, block=False)
             logger.debug(f'Worker recorded job #{job_num}')
         except queue.Empty:
             pass
@@ -240,8 +240,8 @@ def run(func, iterable, n_proc, fail_early=True, trace=True, level=None):
         successful_jobs = []
         successful_job_nums = set()
         while not done_q.empty():
-            (job_num, args) = done_q.get(block=False)
-            successful_jobs.append(args)
+            job_num = done_q.get(block=False)
+            successful_jobs.append(job_table[job_num])
             successful_job_nums.add(job_num)
         unsuccessful_jobs = [
             args for (job_num, args) in job_table.items()
