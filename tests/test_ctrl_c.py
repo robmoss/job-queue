@@ -17,7 +17,7 @@ def test_ctrl_c_handled():
 
     def run_queue():
         logger = multiprocessing.log_to_stderr()
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.WARNING)
 
         pid = os.getpid()
         values = [(i, pid) for i in range(20)]
