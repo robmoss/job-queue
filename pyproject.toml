@@ -1,9 +1,42 @@
 # Setuptools 40.9.0 added support for projects without setup.py.
-# Setuptools 42.0.0 added support for the "license_files" option.
+# Setuptools 61.0.0 added support for reading metadata from pyproject.toml.
 
 [build-system]
 requires = [
-    "setuptools >= 42",
-    "wheel",
+    "setuptools >= 61",
 ]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "parq"
+version = "0.2.0"
+description = "A multi-process job queue"
+readme = "README.rst"
+requires-python = ">= 3.7"
+license = {file = "LICENSE"}
+authors = [
+  {name = "Rob Moss", email = "rgmoss@unimelb.edu.au"}
+]
+maintainers = [
+  {name = "Rob Moss", email = "rgmoss@unimelb.edu.au"}
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: BSD License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: Mathematics",
+]
+dependencies = []
+
+[project.urls]
+homepage = "https://bitbucket.org/robmoss/job-queue/"
+repository = "https://bitbucket.org/robmoss/job-queue/"
+documentation = "https://parq.readthedocs.io/en/latest/"
+changelog = "https://parq.readthedocs.io/en/latest/changelog.html"
+
+[tool.setuptools]
+zip-safe = true
+packages.find.where = ["src"]

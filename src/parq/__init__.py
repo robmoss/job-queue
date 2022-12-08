@@ -11,15 +11,6 @@ import sys
 import traceback
 from typing import Any, Callable
 
-from . import version
-
-__package_name__ = 'parq'
-__author__ = 'Rob Moss'
-__email__ = 'rgmoss@unimelb.edu.au'
-__copyright__ = '2016-2022, Rob Moss'
-__license__ = 'BSD 3-Clause License'
-__version__ = version.__version__
-
 
 @dataclasses.dataclass
 class WorkerConfig:
