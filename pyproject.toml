@@ -12,7 +12,7 @@ name = "parq"
 version = "0.2.0"
 description = "A multi-process job queue"
 readme = "README.rst"
-requires-python = ">= 3.7"
+requires-python = ">= 3.8"
 license = {file = "LICENSE"}
 authors = [
   {name = "Rob Moss", email = "rgmoss@unimelb.edu.au"}
