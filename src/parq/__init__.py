@@ -8,6 +8,7 @@ import pickle
 import queue
 import signal
 import sys
+import time
 import traceback
 from typing import Any, Callable
 
@@ -132,7 +133,7 @@ def _worker(config):
             logger.debug(f'Worker received job #{job_num}: {args}')
             config.func(*args)
             logger.debug(f'Worker finished job #{job_num}')
-            config.out_queue.put(job_num, block=False)
+            config.out_queue.put(job_num, block=True)
             logger.debug(f'Worker recorded job #{job_num}')
         except queue.Empty:
             logger.debug('Queue is empty')
@@ -171,6 +172,40 @@ def _build_job_queue(jobs):
     return job_q, job_num, job_table
 
 
+def _collect_successful_job_nums(workers, done_q):
+    """
+    Collect all of the successful job numbers.
+
+    :param workers: The worker processes.
+    :param done_q: The queue to which successful job numbers are written.
+    """
+    successful_job_nums = set()
+    while True:
+        # Retrieve as many successfully-completed jobs as possible.
+        while True:
+            try:
+                job_num = done_q.get(False)
+                successful_job_nums.add(job_num)
+            except queue.Empty:
+                break
+
+        # Check whether all workers have finished.
+        finished = all(worker.exitcode is not None for worker in workers)
+
+        if finished:
+            for worker in workers:
+                worker.join()
+
+        # NOTE: without this delay, the queue buffer tests sometimes result in
+        # large numbers of BrokenPipeError exceptions to be raised.
+        time.sleep(0.1)
+
+        if finished and done_q.empty():
+            break
+
+    return successful_job_nums
+
+
 def run(func, iterable, n_proc, fail_early=True, trace=True, level=None):
     """
     Perform multiple jobs in parallel by spawning multiple processes.
@@ -203,6 +238,7 @@ def run(func, iterable, n_proc, fail_early=True, trace=True, level=None):
         log_level=level,
         fail_early=fail_early,
         trace=trace)
+    successful_job_nums = set()
 
     try:
         # Start the worker processes.
@@ -217,13 +253,12 @@ def run(func, iterable, n_proc, fail_early=True, trace=True, level=None):
             workers.append(proc)
             proc.start()
         logger.debug('Started all workers')
+
         # Wait for each worker to finish. Without this loop, we jump straight
         # to the finally clause and the KeyboardInterrupt handler (below) is
         # never triggered.
-        for worker in workers:
-            logger.debug('Joining {}'.format(worker))
-            worker.join()
-            logger.debug('Joined {}'.format(worker))
+        successful_job_nums = _collect_successful_job_nums(workers, done_q)
+
         logger.debug('Joined all workers')
     except KeyboardInterrupt:
         # Force each worker to terminate.
@@ -233,12 +268,10 @@ def run(func, iterable, n_proc, fail_early=True, trace=True, level=None):
     except Exception as e:
         print(e)
     finally:
-        successful_jobs = []
-        successful_job_nums = set()
-        while not done_q.empty():
-            job_num = done_q.get(block=False)
-            successful_jobs.append(job_table[job_num])
-            successful_job_nums.add(job_num)
+        successful_jobs = [
+            job_table[job_num]
+            for job_num in successful_job_nums
+        ]
         unsuccessful_jobs = [
             args for (job_num, args) in job_table.items()
             if job_num not in successful_job_nums
