@@ -33,9 +33,11 @@ class Result:
     :type success: bool
     :param job_count: The number of jobs that were submitted.
     :type job_count: int
-    :param successful_jobs: The jobs that were completed successfully.
+    :param successful_jobs: A list that contains the arguments for each job
+        that was completed successfully.
     :type successful_jobs: [Any]
-    :param unsuccessful_jobs: The jobs that were not completed successfully.
+    :param unsuccessful_jobs: A list that contains the arguments for each job
+        that was not completed successfully.
     :type unsuccessful_jobs: [Any]
     :param failed_worker_count: The number of worker processes that terminated
         early.
