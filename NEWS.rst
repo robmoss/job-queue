@@ -1,3 +1,12 @@
+0.2.1 (2022-12-09)
+------------------
+
+* Breaking change: require Python 3.8 or newer.
+
+* Provide control over worker process logging.
+
+* Avoid potential deadlocks when job arguments are extremely large.
+
 0.2.0 (2022-09-06)
 ------------------
 
