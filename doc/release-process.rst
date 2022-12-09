@@ -19,17 +19,13 @@ tagging the relevant commit with the new version number.
      **does not** need to be updated if the version number is being increased
      from X.Y.Z to X.Y.Z+1.
 
-   * Update the version number in ``src/parq/version.py``.
-
-   * Update the version number in ``setup.cfg``.
+   * Update the version number in ``pyproject.toml``.
 
 * Check whether the copyright year(s) need to be updated in:
 
    * ``LICENSE``
 
    * ``doc/conf.py``
-
-   * ``src/parq/__init__.py``
 
 * Describe the changes at the top of ``NEWS.rst`` under a heading of the form
   ``X.Y.Z (YYYY-MM-DD)``, which identifies the new version number and the
@@ -39,7 +35,7 @@ tagging the relevant commit with the new version number.
 
   .. code-block:: shell
 
-     git add NEWS.rst doc/conf.py src/parq/version.py setup.cfg
+     git add NEWS.rst doc/conf.py pyproject.toml
      git commit -m "Release parq X.Y.Z"
 
 * Tag this commit ``X.Y.Z``.
