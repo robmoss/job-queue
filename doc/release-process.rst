@@ -85,4 +85,4 @@ Then upload this wheel to PyPI:
 
 .. code-block:: shell
 
-   python3 -m twine upload dist/parq-X.Y.Z-py2.py3-none-any.whl
+   python3 -m twine upload dist/parq-X.Y.Z-py3-none-any.whl
