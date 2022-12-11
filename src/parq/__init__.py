@@ -8,7 +8,6 @@ import pickle
 import queue
 import signal
 import sys
-import time
 import traceback
 from typing import Any, Callable
 
@@ -188,17 +187,11 @@ def _collect_successful_job_nums(workers, done_q):
     sentinels = 0
     while sentinels < len(workers):
         # Retrieve as many successfully-completed jobs as possible.
-        while True:
-            try:
-                job_num = done_q.get(False)
-                if job_num < 0:
-                    sentinels += 1
-                else:
-                    successful_job_nums.add(job_num)
-            except queue.Empty:
-                break
-
-        time.sleep(0.1)
+        job_num = done_q.get(block=True)
+        if job_num < 0:
+            sentinels += 1
+        else:
+            successful_job_nums.add(job_num)
 
     return successful_job_nums
 
