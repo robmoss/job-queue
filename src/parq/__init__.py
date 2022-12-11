@@ -125,13 +125,15 @@ def _worker(config):
     status_ok = True
     logger = multiprocessing.log_to_stderr(config.log_level)
 
-    while not config.in_queue.empty():
+    while True:
         if config.stop_workers.value:
             logger.debug('Worker stopping early')
             status_ok = False
             break
         try:
             job_num, args = config.in_queue.get(block=False)
+            if job_num < 0:
+                break
             logger.debug(f'Worker received job #{job_num}: {args}')
             config.func(*args)
             logger.debug(f'Worker finished job #{job_num}')
@@ -152,6 +154,7 @@ def _worker(config):
                 break
 
     logger.info(f'Worker exiting, success = {status_ok}')
+    config.out_queue.put(-1, block=True)
     if not status_ok:
         sys.exit(1)
 
@@ -182,28 +185,20 @@ def _collect_successful_job_nums(workers, done_q):
     :param done_q: The queue to which successful job numbers are written.
     """
     successful_job_nums = set()
-    while True:
+    sentinels = 0
+    while sentinels < len(workers):
         # Retrieve as many successfully-completed jobs as possible.
         while True:
             try:
                 job_num = done_q.get(False)
-                successful_job_nums.add(job_num)
+                if job_num < 0:
+                    sentinels += 1
+                else:
+                    successful_job_nums.add(job_num)
             except queue.Empty:
                 break
 
-        # Check whether all workers have finished.
-        finished = all(worker.exitcode is not None for worker in workers)
-
-        if finished:
-            for worker in workers:
-                worker.join()
-
-        # NOTE: without this delay, the queue buffer tests sometimes result in
-        # large numbers of BrokenPipeError exceptions to be raised.
         time.sleep(0.1)
-
-        if finished and done_q.empty():
-            break
 
     return successful_job_nums
 
@@ -241,6 +236,10 @@ def run(func, iterable, n_proc, fail_early=True, trace=True, level=None):
         fail_early=fail_early,
         trace=trace)
     successful_job_nums = set()
+
+    # Add a sentinel value for each worker to consume.
+    for _ in range(n_proc):
+        job_q.put((-1, None), block=False)
 
     try:
         # Start the worker processes.
