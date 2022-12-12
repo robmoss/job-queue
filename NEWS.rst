@@ -1,3 +1,12 @@
+0.2.3 (2022-12-12)
+------------------
+
+* Avoid potential synchronisation issues when jobs are very quick to complete.
+
+* Simplify how completed jobs are collected, avoiding a potential busy-loop.
+
+* Log the number of jobs completed by each worker process.
+
 0.2.2 (2022-12-09)
 ------------------
 
