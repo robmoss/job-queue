@@ -123,6 +123,7 @@ def _worker(config):
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     status_ok = True
     logger = multiprocessing.log_to_stderr(config.log_level)
+    counter = 0
 
     while True:
         if config.stop_workers.value:
@@ -133,6 +134,7 @@ def _worker(config):
             job_num, args = config.in_queue.get(block=False)
             if job_num < 0:
                 break
+            counter += 1
             logger.debug(f'Worker received job #{job_num}: {args}')
             config.func(*args)
             logger.debug(f'Worker finished job #{job_num}')
@@ -152,7 +154,7 @@ def _worker(config):
                     config.stop_workers.value = True
                 break
 
-    logger.info(f'Worker exiting, success = {status_ok}')
+    logger.info(f'Worker exiting, {counter} jobs, success = {status_ok}')
     config.out_queue.put(-1, block=True)
     if not status_ok:
         sys.exit(1)
