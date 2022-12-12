@@ -259,8 +259,8 @@ def run(func, iterable, n_proc, fail_early=True, trace=True, level=None):
         logger.info("Received CTRL-C, terminating {} workers".format(n_proc))
         for worker in workers:
             worker.terminate()
-    except Exception as e:
-        print(e)
+    except Exception:
+        traceback.print_exc()
     finally:
         successful_jobs = [
             job_table[job_num]
