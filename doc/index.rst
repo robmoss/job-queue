@@ -15,6 +15,8 @@ The code is distributed under the terms of the BSD 3-Clause license (see
 A simple example
 ----------------
 
+This package provides a single function :func:`parq.run`, which runs jobs using multiple Python processes and returns a :class:`parq.Result` value when all jobs have completed.
+
 .. code-block:: python
 
    >>> import parq
