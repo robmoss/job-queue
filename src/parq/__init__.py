@@ -185,6 +185,7 @@ def _collect_successful_job_nums(workers, done_q):
     :param workers: The worker processes.
     :param done_q: The queue to which successful job numbers are written.
     """
+    logger = logging.getLogger(__name__)
     successful_job_nums = set()
     sentinels = 0
     while sentinels < len(workers):
@@ -192,9 +193,12 @@ def _collect_successful_job_nums(workers, done_q):
         job_num = done_q.get(block=True)
         if job_num < 0:
             sentinels += 1
+            logger.debug(f'Received {sentinels} sentinel(s)')
         else:
+            logger.debug(f'Received completed job #{job_num}')
             successful_job_nums.add(job_num)
 
+    logger.debug(f'Received {len(successful_job_nums)} successful jobs')
     return successful_job_nums
 
 
