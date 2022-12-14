@@ -10,7 +10,7 @@ import queue
 import signal
 import sys
 import traceback
-from typing import Any, Callable, List
+from typing import Any, Callable, Dict, List, Optional
 
 
 @dataclasses.dataclass
@@ -22,6 +22,7 @@ class WorkerConfig:
     log_level: int
     fail_early: bool = True
     trace: bool = True
+    collect_results: bool = False
 
 
 @dataclasses.dataclass
@@ -42,6 +43,10 @@ class Result:
     :param failed_worker_count: The number of worker processes that terminated
         early.
     :type failed_worker_count: int
+    :param job_results: An optional dictionary that maps successful job
+       numbers to the returned results of those jobs. If results were not
+       collected, this will be ``None``.
+    :type job_results: Optional[Dict[int, Any]]
 
     Instances are considered true if ``success`` is true, otherwise they are
     considered false.
@@ -58,6 +63,7 @@ class Result:
     successful_jobs: List[Any]
     unsuccessful_jobs: List[Any]
     failed_worker_count: int
+    job_results: Optional[Dict[int, Any]] = None
 
     def __bool__(self):
         """
@@ -138,9 +144,12 @@ def _worker(config):
                 break
             counter += 1
             logger.debug(f'Worker received job #{job_num}: {args}')
-            config.func(*args)
+            result = config.func(*args)
             logger.debug(f'Worker finished job #{job_num}')
-            config.out_queue.put(job_num, block=True)
+            if config.collect_results:
+                config.out_queue.put((job_num, result), block=True)
+            else:
+                config.out_queue.put(job_num, block=True)
             logger.debug(f'Worker recorded job #{job_num}')
         except queue.Empty:
             logger.debug('Queue is empty')
@@ -157,7 +166,10 @@ def _worker(config):
                 break
 
     logger.info(f'Worker exiting, {counter} jobs, success = {status_ok}')
-    config.out_queue.put(-1, block=True)
+    if config.collect_results:
+        config.out_queue.put((-1, None), block=True)
+    else:
+        config.out_queue.put(-1, block=True)
     if not status_ok:
         sys.exit(1)
 
@@ -170,29 +182,36 @@ def _build_job_queue(jobs):
     for args in jobs:
         if fails_to_pickle(args):
             raise ValueError(f'Invalid arguments: {args}')
-        job_num += 1
         try:
             job_q.put((job_num, args), block=False)
         except queue.Full as e:
             raise ValueError(f'Cannot add job {job_num} to the queue') from e
         job_table[job_num] = args
+        job_num += 1
 
     return job_q, job_num, job_table
 
 
-def _collect_successful_job_nums(workers, done_q):
+def _collect_successful_job_nums(workers, done_q, results):
     """
     Collect all of the successful job numbers.
 
     :param workers: The worker processes.
     :param done_q: The queue to which successful job numbers are written.
+    :param results: Whether ``done_q`` includes job results.
     """
     logger = logging.getLogger(__name__)
     successful_job_nums = set()
+    job_results = {} if results else None
     sentinels = 0
     while sentinels < len(workers):
         # Retrieve as many successfully-completed jobs as possible.
-        job_num = done_q.get(block=True)
+        if results:
+            (job_num, result) = done_q.get(block=True)
+            if job_num >= 0:
+                job_results[job_num] = result
+        else:
+            job_num = done_q.get(block=True)
         if job_num < 0:
             sentinels += 1
             logger.debug(f'Received {sentinels} sentinel(s)')
@@ -201,10 +220,18 @@ def _collect_successful_job_nums(workers, done_q):
             successful_job_nums.add(job_num)
 
     logger.debug(f'Received {len(successful_job_nums)} successful jobs')
-    return successful_job_nums
+    return (successful_job_nums, job_results)
 
 
-def run(func, iterable, n_proc, fail_early=True, trace=True, level=None):
+def run(
+    func,
+    iterable,
+    n_proc,
+    fail_early=True,
+    trace=True,
+    level=None,
+    results=False,
+):
     """
     Perform multiple jobs in parallel by spawning multiple processes.
 
@@ -217,6 +244,7 @@ def run(func, iterable, n_proc, fail_early=True, trace=True, level=None):
         exception.
     :param level: The logging level for worker processes. By default, only
         warnings and errors will be shown.
+    :param results: Whether to return the results of each job.
 
     :returns: A :class:`Result` instance.
     :rtype: parq.Result
@@ -239,8 +267,10 @@ def run(func, iterable, n_proc, fail_early=True, trace=True, level=None):
         log_level=level,
         fail_early=fail_early,
         trace=trace,
+        collect_results=results,
     )
     successful_job_nums = set()
+    job_results = None
 
     # Add a sentinel value for each worker to consume.
     for _ in range(n_proc):
@@ -263,7 +293,9 @@ def run(func, iterable, n_proc, fail_early=True, trace=True, level=None):
         # Wait for each worker to finish. Without this loop, we jump straight
         # to the finally clause and the KeyboardInterrupt handler (below) is
         # never triggered.
-        successful_job_nums = _collect_successful_job_nums(workers, done_q)
+        successful_job_nums, job_results = _collect_successful_job_nums(
+            workers, done_q, results
+        )
 
         logger.debug('Joined all workers')
     except KeyboardInterrupt:
@@ -304,4 +336,5 @@ def run(func, iterable, n_proc, fail_early=True, trace=True, level=None):
         successful_jobs=successful_jobs,
         unsuccessful_jobs=unsuccessful_jobs,
         failed_worker_count=failed_worker_count,
+        job_results=job_results,
     )
