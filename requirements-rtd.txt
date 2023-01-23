@@ -1,0 +1,6 @@
+# NOTE: pin docutils to fix Read the Docs builds.
+# See https://github.com/sphinx-doc/sphinx/issues/9727
+# and https://github.com/readthedocs/sphinx_rtd_theme/issues/1323
+docutils<0.18
+sphinx>=2.0
+sphinx-rtd-theme>=1.0

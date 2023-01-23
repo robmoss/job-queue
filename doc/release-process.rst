@@ -9,7 +9,7 @@ tagging the relevant commit with the new version number.
 
   .. code-block:: shell
 
-     tox
+     nox
 
 * Update the version number according to the
   `versioning scheme <https://www.python.org/dev/peps/pep-0440/>`__.

@@ -40,3 +40,18 @@ changelog = "https://parq.readthedocs.io/en/latest/changelog.html"
 [tool.setuptools]
 zip-safe = true
 packages.find.where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = """\
+    --doctest-modules \
+    --doctest-glob='*.rst' \
+    --capture=no \
+    --cov-report term-missing \
+    --cov-report html\
+    """
+
+[tool.coverage.run]
+concurrency = ["multiprocessing"]
+parallel = true
+sigterm = true
+source = ["parq"]

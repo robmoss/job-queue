@@ -129,13 +129,9 @@ pygments_style = 'sphinx'
 
 # Only import and set the theme if building the documentation locally.
 if not on_rtd:
-    try:
-        import sphinx_rtd_theme
-        html_theme = 'sphinx_rtd_theme'
-        html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-    except ModuleNotFoundError:
-        # NOTE: this can occur when running the doctests with tox.
-        print('Could not load sphinx_rtd_theme')
+    import sphinx_rtd_theme
+    html_theme = 'sphinx_rtd_theme'
+    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

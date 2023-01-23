@@ -6,31 +6,30 @@ cache:
   paths:
     - .cache/pip
 
-# Run all of the test activities in tox.ini using Python 3.8.
-tox-38:
+before_script:
+  - pip install nox
+
+# Run all of the test activities using Python 3.8.
+tests-38:
   image: python:3.8-slim
   script:
-    - pip install tox
-    - tox
+    - nox
 
-# Run all of the test activities in tox.ini using Python 3.9.
-tox-39:
+# Run all of the test activities using Python 3.9.
+tests-39:
   image: python:3.9-slim
   script:
-    - pip install tox
-    - tox
+    - nox
 
-# Run all of the test activities in tox.ini using Python 3.10.
-tox-310:
+# Run all of the test activities using Python 3.10.
+tests-310:
   image: python:3.10-slim
   script:
-    - pip install tox
-    - tox
+    - nox
 
-# Run all of the test activities in tox.ini using Python 3.11.
-tox-311:
+# Run all of the test activities using Python 3.11.
+tests-311:
   image: python:3.11-slim
   coverage: '/^TOTAL.+?(\d+\%)$/'
   script:
-    - pip install tox
-    - tox
+    - nox
