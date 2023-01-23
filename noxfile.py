@@ -24,7 +24,7 @@ def tests(session):
     session.run(
         'python3', '-bb', Path(session.bin) / 'pytest',
         f'--cov={package}',
-        '--pyargs', f'{package}', './tests', './doc',
+        '--pyargs', package, './tests', './doc',
         *session.posargs,
         env={
             # NOTE: Do not import sphinx_rtd_theme in doc/conf.py.
