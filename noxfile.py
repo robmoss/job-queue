@@ -17,8 +17,7 @@ def build(session):
 @nox.session()
 def tests(session):
     """Run test cases and record the test coverage."""
-    session.install('pytest', 'pytest-cov')
-    session.install('.')
+    session.install('.[tests]')
     # Run the test cases and report the test coverage.
     package = 'parq'
     session.run(

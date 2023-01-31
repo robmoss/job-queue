@@ -31,6 +31,12 @@ classifiers = [
 ]
 dependencies = []
 
+[project.optional-dependencies]
+tests = [
+  'pytest',
+  'pytest-cov ~= 4.0',
+]
+
 [project.urls]
 homepage = "https://bitbucket.org/robmoss/job-queue/"
 repository = "https://bitbucket.org/robmoss/job-queue/"
