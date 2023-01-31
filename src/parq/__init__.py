@@ -4,12 +4,13 @@ import ctypes
 import dataclasses
 import logging
 import multiprocessing
+import multiprocessing.sharedctypes
 import pickle
 import queue
 import signal
 import sys
 import traceback
-from typing import Any, Callable
+from typing import Any, Callable, List
 
 
 @dataclasses.dataclass
@@ -17,7 +18,7 @@ class WorkerConfig:
     func: Callable[[Any], None]
     in_queue: multiprocessing.Queue
     out_queue: multiprocessing.Queue
-    stop_workers: multiprocessing.Value
+    stop_workers: multiprocessing.sharedctypes.Synchronized
     log_level: int
     fail_early: bool = True
     trace: bool = True
@@ -51,10 +52,11 @@ class Result:
     >>> res_bad = Result(False, 0, [], [], 0)
     >>> assert not res_bad
     """
+
     success: bool
     job_count: int
-    successful_jobs: [Any]
-    unsuccessful_jobs: [Any]
+    successful_jobs: List[Any]
+    unsuccessful_jobs: List[Any]
     failed_worker_count: int
 
     def __bool__(self):
@@ -109,8 +111,8 @@ def fails_to_pickle(item):
 
     descend_into(item, [])
     if invalid_paths:
-        for (path, value) in invalid_paths:
-            msg = "Invalid value: {}".format(value)
+        for (_path, value) in invalid_paths:
+            msg = 'Invalid value: {}'.format(value)
             logger.error(msg)
         return True
 
@@ -171,8 +173,8 @@ def _build_job_queue(jobs):
         job_num += 1
         try:
             job_q.put((job_num, args), block=False)
-        except queue.Full:
-            raise ValueError(f'Could not add job {job_num} to the queue')
+        except queue.Full as e:
+            raise ValueError(f'Cannot add job {job_num} to the queue') from e
         job_table[job_num] = args
 
     return job_q, job_num, job_table
@@ -233,7 +235,8 @@ def run(func, iterable, n_proc, fail_early=True, trace=True, level=None):
         stop_workers=stop_workers,
         log_level=level,
         fail_early=fail_early,
-        trace=trace)
+        trace=trace,
+    )
     successful_job_nums = set()
 
     # Add a sentinel value for each worker to consume.
@@ -245,11 +248,11 @@ def run(func, iterable, n_proc, fail_early=True, trace=True, level=None):
         if n_proc > n_jobs:
             # Spawn no more processes than there are jobs
             n_proc = n_jobs
-        logger.info("Spawning {} workers for {} jobs".format(n_proc, n_jobs))
-        for i in range(n_proc):
+        logger.info('Spawning {} workers for {} jobs'.format(n_proc, n_jobs))
+        for _ in range(n_proc):
             proc = multiprocessing.Process(
-                target=_worker,
-                args=[worker_config])
+                target=_worker, args=[worker_config]
+            )
             workers.append(proc)
             proc.start()
         logger.debug('Started all workers')
@@ -262,18 +265,18 @@ def run(func, iterable, n_proc, fail_early=True, trace=True, level=None):
         logger.debug('Joined all workers')
     except KeyboardInterrupt:
         # Force each worker to terminate.
-        logger.info("Received CTRL-C, terminating {} workers".format(n_proc))
+        logger.info('Received CTRL-C, terminating {} workers'.format(n_proc))
         for worker in workers:
             worker.terminate()
     except Exception:
         traceback.print_exc()
     finally:
         successful_jobs = [
-            job_table[job_num]
-            for job_num in successful_job_nums
+            job_table[job_num] for job_num in successful_job_nums
         ]
         unsuccessful_jobs = [
-            args for (job_num, args) in job_table.items()
+            args
+            for (job_num, args) in job_table.items()
             if job_num not in successful_job_nums
         ]
         n_done = len(successful_jobs)
@@ -288,12 +291,14 @@ def run(func, iterable, n_proc, fail_early=True, trace=True, level=None):
             # It will apparently be 1 if an exception was raised.
             # all_good = all_good and worker.exitcode == 0
             if worker.exitcode != 0:
-                msg = "Worker {} exit code: {}"
+                msg = 'Worker {} exit code: {}'
                 logger.info(msg.format(ix, worker.exitcode))
                 failed_worker_count += 1
 
-        return Result(success=success,
-                      job_count=n_jobs,
-                      successful_jobs=successful_jobs,
-                      unsuccessful_jobs=unsuccessful_jobs,
-                      failed_worker_count=failed_worker_count)
+    return Result(
+        success=success,
+        job_count=n_jobs,
+        successful_jobs=successful_jobs,
+        unsuccessful_jobs=unsuccessful_jobs,
+        failed_worker_count=failed_worker_count,
+    )

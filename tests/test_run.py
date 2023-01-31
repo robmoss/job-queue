@@ -43,7 +43,6 @@ def test_success_fewer_workers(caplog):
 
 
 def test_failure_early():
-
     def func(x):
         if x == 3:
             raise ValueError('x == 3')
@@ -62,7 +61,6 @@ def test_failure_early():
 
 
 def test_failure_late():
-
     def func(x):
         if x == 3:
             raise ValueError('x == 3')
@@ -70,8 +68,9 @@ def test_failure_late():
     # Run the functions in parallel and ensure it failed to complete.
     values = [(i,) for i in range(10)]
     n_proc = 2
-    result = parq.run(func, values, n_proc=n_proc, fail_early=False,
-                      level=logging.WARNING)
+    result = parq.run(
+        func, values, n_proc=n_proc, fail_early=False, level=logging.WARNING
+    )
     assert not result.success
 
     # The failure at x == 3 should result in only one worker process failing.
