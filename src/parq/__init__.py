@@ -215,7 +215,8 @@ def run(func, iterable, n_proc, fail_early=True, trace=True, level=None):
     :param fail_early: Whether to stop running jobs if one fails.
     :param trace: Whether to print stack traces for jobs that raise an
         exception.
-    :param level: The logging level for worker processes.
+    :param level: The logging level for worker processes. By default, only
+        warnings and errors will be shown.
 
     :returns: A :class:`Result` instance.
     :rtype: parq.Result
@@ -224,6 +225,8 @@ def run(func, iterable, n_proc, fail_early=True, trace=True, level=None):
     # KeyboardInterrupt exceptions correctly. For details, see:
     # http://bryceboe.com/2012/02/14/python-multiprocessing-pool-and-keyboardinterrupt-revisited/
     logger = logging.getLogger(__name__)
+    if level is None:
+        level = logging.WARNING
     job_q, n_jobs, job_table = _build_job_queue(iterable)
     done_q = multiprocessing.Queue()
     stop_workers = multiprocessing.Value(ctypes.c_bool, False)

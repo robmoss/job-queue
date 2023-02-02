@@ -15,7 +15,7 @@ def test_success(caplog):
     # Run the functions in parallel and ensure it completed successfully.
     values = [(i,) for i in range(10)]
     n_proc = 2
-    result = parq.run(func, values, n_proc=n_proc, level=logging.WARNING)
+    result = parq.run(func, values, n_proc=n_proc)
     assert result.success
 
     assert 'Spawning 2 workers for 10 jobs' in caplog.text
@@ -34,7 +34,7 @@ def test_success_fewer_workers(caplog):
     # Run the functions in parallel and ensure it completed successfully.
     values = [(i,) for i in range(2)]
     n_proc = 10
-    result = parq.run(func, values, n_proc=n_proc, level=logging.WARNING)
+    result = parq.run(func, values, n_proc=n_proc)
     assert result.success
 
     assert 'Spawning 2 workers for 2 jobs' in caplog.text
@@ -50,7 +50,7 @@ def test_failure_early():
     # Run the functions in parallel and ensure it failed to complete.
     values = [(i,) for i in range(100)]
     n_proc = 2
-    result = parq.run(func, values, n_proc=n_proc, level=logging.WARNING)
+    result = parq.run(func, values, n_proc=n_proc)
     assert not result.success
 
     # The failure at x == 3 should result in all worker processes failing.
