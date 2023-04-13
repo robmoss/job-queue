@@ -30,6 +30,31 @@ This package provides a single function :func:`parq.run`, which runs jobs using 
    >>> success = parq.run(my_job, job_inputs, n_proc=4)
    >>> assert success
 
+Job return values
+-----------------
+
+By default, **the return value of each job is ignored**.
+You can instruct :func:`parq.run` to record the return value of each job by passing ``results=True``.
+The ``job_results`` field will then contain a dictionary that maps job numbers (0, 1, 2, ...) to return values.
+
+.. code-block:: python
+
+   >>> import parq
+   >>> # Define a job that doubles its input argument.
+   >>> def double_input(x):
+   ...     return 2 * x
+   ...
+   >>> # Define the input argument for each job.
+   >>> job_inputs = [(i,) for i in range(10)]
+   >>> # Run these 10 jobs using 4 processes.
+   >>> result = parq.run(double_input, job_inputs, n_proc=4, results=True)
+   >>> # Check that we obtained the expected results.
+   >>> assert result.job_results == {i: 2 * i for i in range(10)}
+
+.. warning::
+
+   If you use :func:`parq.run` to run jobs that return very large data structures, you should consider saving the results of each job to an external file, rather than passing ``results=True``.
+
 Installation
 ------------
 

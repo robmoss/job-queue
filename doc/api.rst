@@ -12,7 +12,7 @@ This package provides a single function :func:`parq.run`, which runs jobs using 
 
 .. warning::
 
-   If you use :func:`parq.run` to run many jobs that each return a very large data structure, you should consider saving the results of each job to an external file, rather than passing ``results=True``.
+   If you use :func:`parq.run` to run jobs that return very large data structures, you should consider saving the results of each job to an external file, rather than passing ``results=True``.
 
 .. autofunction:: parq.run
 
