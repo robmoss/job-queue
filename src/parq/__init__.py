@@ -192,26 +192,37 @@ def _build_job_queue(jobs):
     return job_q, job_num, job_table
 
 
-def _collect_successful_job_nums(workers, done_q, results):
+def _collect_successful_job_nums(workers, done_q, results, timeout):
     """
     Collect all of the successful job numbers.
 
     :param workers: The worker processes.
     :param done_q: The queue to which successful job numbers are written.
     :param results: Whether ``done_q`` includes job results.
+    :param timeout: The optional timeout (in seconds) when polling for job
+        results; set to ``None`` to block until a result is received.
     """
     logger = logging.getLogger(__name__)
     successful_job_nums = set()
     job_results = {} if results else None
+    killed_workers = set()
     sentinels = 0
-    while sentinels < len(workers):
+    while sentinels < (len(workers) - len(killed_workers)):
+        # Detect worker process that have terminated unexpectedly.
+        for worker in workers:
+            ex = worker.exitcode
+            if ex is not None and ex != 0:
+                killed_workers.add(worker)
         # Retrieve as many successfully-completed jobs as possible.
-        if results:
-            (job_num, result) = done_q.get(block=True)
-            if job_num >= 0:
-                job_results[job_num] = result
-        else:
-            job_num = done_q.get(block=True)
+        try:
+            if results:
+                (job_num, result) = done_q.get(block=True, timeout=timeout)
+                if job_num >= 0:
+                    job_results[job_num] = result
+            else:
+                job_num = done_q.get(block=True, timeout=timeout)
+        except queue.Empty:
+            continue
         if job_num < 0:
             sentinels += 1
             logger.debug(f'Received {sentinels} sentinel(s)')
@@ -231,6 +242,7 @@ def run(
     trace=True,
     level=None,
     results=False,
+    timeout=None,
 ):
     """
     Perform multiple jobs in parallel by spawning multiple processes.
@@ -245,6 +257,11 @@ def run(
     :param level: The logging level for worker processes. By default, only
         warnings and errors will be shown.
     :param results: Whether to return the results of each job.
+    :param timeout: The optional timeout (in seconds) when polling for job
+        results. By default, polling will block until a result is received.
+        If a worker process is terminated unexpectedly (e.g., by running out
+        of memory) this function **will deadlock unless** a timeout duration
+        is provided.
 
     :returns: A :class:`Result` instance.
     :rtype: parq.Result
@@ -294,7 +311,7 @@ def run(
         # to the finally clause and the KeyboardInterrupt handler (below) is
         # never triggered.
         successful_job_nums, job_results = _collect_successful_job_nums(
-            workers, done_q, results
+            workers, done_q, results, timeout
         )
 
         logger.debug('Joined all workers')
