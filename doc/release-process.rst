@@ -35,7 +35,7 @@ tagging the relevant commit with the new version number.
 
   .. code-block:: shell
 
-     git add NEWS.rst doc/conf.py pyproject.toml
+     git add LICENSE NEWS.rst doc/conf.py pyproject.toml
      git commit -m "Release parq X.Y.Z"
 
 * Tag this commit ``X.Y.Z``.
