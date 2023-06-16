@@ -207,6 +207,17 @@ def _collect_successful_job_nums(workers, done_q, results, timeout):
     job_results = {} if results else None
     killed_workers = set()
     sentinels = 0
+    # NOTE: to avoid deadlocking when one or more worker processes terminates
+    # without first sending a sentinel, we need to monitor the processes and
+    # record how many have terminated unexpectedly.
+    #
+    # This means we cannot block indefinitely when waiting for job results.
+    # Instead, we must use a finite timeout so that we can monitor the worker
+    # processes on a regular basis.
+    #
+    # We assume that processes with non-zero exit codes have terminated
+    # unexpectedly, and that this occurred before the worker was able to send
+    # its sentinel.
     while sentinels < (len(workers) - len(killed_workers)):
         # Detect worker process that have terminated unexpectedly.
         for worker in workers:
@@ -242,7 +253,7 @@ def run(
     trace=True,
     level=None,
     results=False,
-    timeout=None,
+    timeout=10,
 ):
     """
     Perform multiple jobs in parallel by spawning multiple processes.
@@ -258,13 +269,15 @@ def run(
         warnings and errors will be shown.
     :param results: Whether to return the results of each job.
     :param timeout: The optional timeout (in seconds) when polling for job
-        results. By default, polling will block until a result is received.
-        If a worker process is terminated unexpectedly (e.g., by running out
-        of memory) this function **will deadlock unless** a timeout duration
-        is provided.
+        results. Set this to ``None`` to block until a result is received.
 
     :returns: A :class:`Result` instance.
     :rtype: parq.Result
+
+    .. warning::
+
+       If a worker process is terminated unexpectedly (e.g., by running out
+       of memory) this function **will deadlock** if ``timeout`` is ``None``.
     """
     # Note: we avoid using multiprocessing.Pool because it does not handle
     # KeyboardInterrupt exceptions correctly. For details, see:
