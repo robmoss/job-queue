@@ -313,9 +313,9 @@ def run(
             # Spawn no more processes than there are jobs
             n_proc = n_jobs
         logger.info('Spawning {} workers for {} jobs'.format(n_proc, n_jobs))
-        for _ in range(n_proc):
+        for i in range(n_proc):
             proc = multiprocessing.Process(
-                target=_worker, args=[worker_config]
+                target=_worker, args=[worker_config], name=f'parq-{i + 1}'
             )
             workers.append(proc)
             proc.start()
