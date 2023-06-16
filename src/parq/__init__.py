@@ -165,11 +165,12 @@ def _worker(config):
                     config.stop_workers.value = True
                 break
 
-    logger.info(f'Worker exiting, {counter} jobs, success = {status_ok}')
+    logger.debug('Worker sending sentinel')
     if config.collect_results:
         config.out_queue.put((-1, None), block=True)
     else:
         config.out_queue.put(-1, block=True)
+    logger.info(f'Worker exiting, {counter} jobs, success = {status_ok}')
     if not status_ok:
         sys.exit(1)
 
