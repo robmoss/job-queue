@@ -156,7 +156,7 @@ def _worker(config):
         except Exception:
             logger.debug('Worker caught an exception')
             if config.trace:
-                logger.info(traceback.format_exc())
+                logger.warning(traceback.format_exc())
             status_ok = False
             if config.fail_early:
                 logger.debug('Will stop workers early')
