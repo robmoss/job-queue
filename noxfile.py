@@ -15,7 +15,7 @@ def build(session):
         shutil.rmtree(build_dir)
 
     session.install('build')
-    session.run('python', '-m', 'build', '-C--global-option=-q')
+    session.run('python', '-m', 'build')
 
 
 @nox.session()
