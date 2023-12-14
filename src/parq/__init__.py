@@ -117,7 +117,7 @@ def fails_to_pickle(item):
 
     descend_into(item, [])
     if invalid_paths:
-        for (_path, value) in invalid_paths:
+        for _path, value in invalid_paths:
             msg = 'Invalid value: {}'.format(value)
             logger.error(msg)
         return True

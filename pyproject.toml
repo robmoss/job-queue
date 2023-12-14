@@ -59,6 +59,5 @@ select = ["F", "E", "W", "B"]
 line-length = 78
 target-version = "py38"
 
-[tool.blue]
-line-length = 78
-target-version = ["py38"]
+[tool.ruff.format]
+quote-style = "single"
