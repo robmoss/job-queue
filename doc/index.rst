@@ -55,6 +55,19 @@ The ``job_results`` field will then contain a dictionary that maps job numbers (
 
    If you use :func:`parq.run` to run jobs that return very large data structures, you should consider saving the results of each job to an external file, rather than passing ``results=True``.
 
+Related packages
+----------------
+
+There are a number of Python packages that provide similar functionality, and which may better suit your needs.
+For example:
+
+- `concurrent.futures <https://docs.python.org/3/library/concurrent.futures.html>`__
+- `dask <https://www.dask.org/>`__
+- `futureproof <https://futureproof.readthedocs.io/>`__
+- `lox <https://lox.readthedocs.io/>`__
+- `MPIRE <https://sybrenjansen.github.io/mpire/>`__
+- `Parsl <https://parsl.readthedocs.io/>`__
+
 Installation
 ------------
 
