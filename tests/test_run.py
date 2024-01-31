@@ -50,7 +50,10 @@ def test_failure_early():
     # Run the functions in parallel and ensure it failed to complete.
     values = [(i,) for i in range(100)]
     n_proc = 2
-    result = parq.run(func, values, n_proc=n_proc)
+    # Set the logging level to ERROR to avoid printing the stack trace.
+    # We do this rather than turning off stack traces (`trace=False`) because
+    # we want the stack trace to be logged for coverage purposes.
+    result = parq.run(func, values, n_proc=n_proc, level=logging.ERROR)
     assert not result.success
 
     # The failure at x == 3 should result in all worker processes failing.
@@ -68,8 +71,11 @@ def test_failure_late():
     # Run the functions in parallel and ensure it failed to complete.
     values = [(i,) for i in range(10)]
     n_proc = 2
+    # Set the logging level to ERROR to avoid printing the stack trace.
+    # We do this rather than turning off stack traces (`trace=False`) because
+    # we want the stack trace to be logged for coverage purposes.
     result = parq.run(
-        func, values, n_proc=n_proc, fail_early=False, level=logging.WARNING
+        func, values, n_proc=n_proc, fail_early=False, level=logging.ERROR
     )
     assert not result.success
 
