@@ -34,10 +34,6 @@ def tests(session):
         './tests',
         './doc',
         *session.posargs,
-        env={
-            # NOTE: Do not import sphinx_rtd_theme in doc/conf.py.
-            'READTHEDOCS': 'True',
-        },
     )
 
 

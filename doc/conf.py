@@ -8,9 +8,6 @@ import os
 # documentation root, use os.path.abspath to make it absolute, as shown here.
 sys.path.insert(0, os.path.abspath(os.path.join('..', 'src')))
 
-# Determine whether the documentation is being built on Read The Docs.
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
