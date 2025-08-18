@@ -64,6 +64,7 @@ For example:
 - `concurrent.futures <https://docs.python.org/3/library/concurrent.futures.html>`__
 - `dask <https://www.dask.org/>`__
 - `futureproof <https://futureproof.readthedocs.io/>`__
+- `joblib <https://joblib.readthedocs.io/>`__
 - `lox <https://lox.readthedocs.io/>`__
 - `MPIRE <https://sybrenjansen.github.io/mpire/>`__
 - `Parsl <https://parsl.readthedocs.io/>`__
